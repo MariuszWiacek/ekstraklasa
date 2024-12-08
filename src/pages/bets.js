@@ -209,6 +209,12 @@ const Bets = () => {
 
   return (
     <div className="fade-in" style={{ textAlign: 'center' }}>
+      <p style={{ color: 'red', textAlign: 'center', fontWeight: 'bolder' }}>
+  UWAGA !! <hr></hr>Ostatni mecz naszej ligi nadchodzi! Jest to mecz zaległy Śląsk - Radomiak 14/12/2024, mecz który obstawialiśmy w sierpniu. <br></br>Jeśli ktoś chce zmienić swój typ, proszę napisać na chatbox, to usunę stary typ i będzie można dodać nowy. Powodzenia!
+</p><hr></hr>
+<p style={{ textAlign: 'center', fontStyle: 'italic' }}>
+  W przypadku wyrównanej walki do ostatniej kolejki karty z typami nie będą widoczne do rozpoczęcia meczu.
+</p><hr></hr>
       <p>Wybrany użytkownik : </p>
       <FontAwesomeIcon icon={faUser} style={{ marginRight: '8px', fontSize: '14px', color: 'yellow' }} />
       <select
