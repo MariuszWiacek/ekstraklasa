@@ -329,7 +329,7 @@
         "type": "",
         "kickoff": "17:30",
         "venue": "",
-        "date": "2024-08-04",
+        "date": "2024-12-14",
         "disabled": false
       },
       {
@@ -2169,20 +2169,8 @@
   "venue": "",
   "date": "2024-12-09",
   "disabled": false
-},
-{
-  "id": 25,
-  "home": "Śląsk",
-  "away": "Radomiak",
-  "score": "",
-  "bet": "",
-  "result": "",
-  "type": "",
-  "kickoff": "17:30 ",
-  "venue": "",
-  "date": "2024-12-14",
-  "disabled": false
 }
+
 
 
 
