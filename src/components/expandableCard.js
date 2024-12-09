@@ -10,6 +10,10 @@ const ExpandableCard = ({ user, bets, results }) => {
   // Set initial page to the last page
   const [currentPage, setCurrentPage] = useState(totalPages - 1);
   const [expanded, setExpanded] = useState(false); // Start as closed by default
+  if (user === "Alan" || user === "Robert") {
+    return null; // Do not render the card for these users
+  }
+  
 
   const getTypeFromResult = (result) => {
     if (!result) return null;
