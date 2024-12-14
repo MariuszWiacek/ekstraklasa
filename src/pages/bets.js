@@ -250,25 +250,27 @@ const Bets = () => {
     </tr>
   </thead>
   <tbody>
-    {kolejki[currentKolejkaIndex].games.map((game, index) => (
+  {/* Check if kolejki and the selected currentKolejkaIndex are valid */}
+  {kolejki && kolejki[currentKolejkaIndex] && kolejki[currentKolejkaIndex].games ? (
+    kolejki[currentKolejkaIndex].games.map((game, index) => (
       <React.Fragment key={index}>
         <tr
           style={{
-            
             opacity: game.disabled ? '0.5' : '1',
             pointerEvents: game.disabled ? 'none' : 'auto',
             backgroundColor: gameStarted(game.date, game.kickoff) ? '#214029ab' : 'transparent',
           }}
         >
-          <td colSpan="12" className="date"
-    style={{ textAlign: 'left', color: 'gold', fontSize: '10px', paddingLeft: '10%' }}>
-    
-    &nbsp;&nbsp;&nbsp;
-    {game.date}
-    &nbsp;&nbsp;&nbsp;
-    {game.kickoff}
-</td>
-
+          <td
+            colSpan="12"
+            className="date"
+            style={{ textAlign: 'left', color: 'gold', fontSize: '10px', paddingLeft: '10%' }}
+          >
+            &nbsp;&nbsp;&nbsp;
+            {game.date}
+            &nbsp;&nbsp;&nbsp;
+            {game.kickoff}
+          </td>
         </tr>
         <tr
           style={{
@@ -277,20 +279,15 @@ const Bets = () => {
             pointerEvents: game.disabled ? 'none' : 'auto',
             backgroundColor: gameStarted(game.date, game.kickoff) ? '#214029ab' : 'transparent',
           }}
-        ><p style={{ color: 'grey' }}>{game.id}.</p>
+        >
+          <p style={{ color: 'grey' }}>{game.id}.</p>
           <td style={{ textAlign: 'center', paddingRight: '10px', fontSize: '20px' }}>
-            <img
-              src={getTeamLogo(game.home)}
-              className="logo"
-            />
+            <img src={getTeamLogo(game.home)} className="logo" />
             {game.home}
           </td>
           <td style={{ textAlign: 'center', fontSize: '20px' }}>-</td>
           <td style={{ textAlign: 'left', paddingLeft: '10px', fontSize: '20px' }}>
-            <img
-              src={getTeamLogo(game.away)}
-              className="logo"
-            />
+            <img src={getTeamLogo(game.away)} className="logo" />
             {game.away}
           </td>
           <td style={{ textAlign: 'center', fontSize: '20px' }}>{results[game.id]}</td>
@@ -300,24 +297,41 @@ const Bets = () => {
               <option value="X">X</option>
               <option value="2">2</option>
             </select>
-                  </td>
-                  <td>
-                    <input
-                      style={{ width: '50px', backgroundColor: game.score ? (isReadOnly(selectedUser, game.id) ? 'transparent' : 'white') : 'white', cursor: isReadOnly(selectedUser, game.id) ? 'not-allowed' : 'text', color: 'red' }}
-                      type="text"
-                      placeholder={isReadOnly(selectedUser, game.id) ? "✔️" : "x:x"}
-                      value={game.score}
-                      onChange={(e) => handleScoreChange(game.id, e.target.value)}
-                      maxLength="3"
-                      readOnly={areInputsEditable && isReadOnly(selectedUser, game.id)}
-                      title={areInputsEditable && isReadOnly(selectedUser, game.id) ? "✔️" : ""}
-                      disabled={areInputsEditable && gameStarted(game.date, game.kickoff)}
-                    />
-                  </td>
-                </tr>
-              </React.Fragment>
-            ))}
-          </tbody>
+          </td>
+          <td>
+            <input
+              style={{
+                width: '50px',
+                backgroundColor: game.score
+                  ? isReadOnly(selectedUser, game.id)
+                    ? 'transparent'
+                    : 'white'
+                  : 'white',
+                cursor: isReadOnly(selectedUser, game.id) ? 'not-allowed' : 'text',
+                color: 'red',
+              }}
+              type="text"
+              placeholder={isReadOnly(selectedUser, game.id) ? '✔️' : 'x:x'}
+              value={game.score}
+              onChange={(e) => handleScoreChange(game.id, e.target.value)}
+              maxLength="3"
+              readOnly={areInputsEditable && isReadOnly(selectedUser, game.id)}
+              title={areInputsEditable && isReadOnly(selectedUser, game.id) ? '✔️' : ''}
+              disabled={areInputsEditable && gameStarted(game.date, game.kickoff)}
+            />
+          </td>
+        </tr>
+      </React.Fragment>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="6" style={{ textAlign: 'center' }}>
+        Koniec rundy jesiennej.
+      </td>
+    </tr>
+  )}
+</tbody>
+
         </table>
 
         
