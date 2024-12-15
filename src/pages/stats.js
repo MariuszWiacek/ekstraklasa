@@ -248,7 +248,7 @@ const Stats = () => {
           <hr />
           <h3 style={{ textAlign: 'center', fontFamily: 'Rubik' }}>🏆 Rekordy ligi 🏆</h3><hr />
 
-          <Table striped bordered hover responsive>
+          <Table>
             <thead>
               <tr>
                 <th>Gracz</th>
