@@ -59,9 +59,9 @@ const trendStyle = {
 
 // Prize information
 const prizes = [ 
-  { place: '🥇 1 miejsce', reward: 400 },
-  { place: '🥈 2 miejsce', reward: 100 },
-  { place: '🥉 3 miejsce', reward: 50 }
+  { place: '🥇 1 miejsce - ROBERT', reward: 400 },
+  { place: '🥈 2 miejsce - ALAN', reward: 100 },
+  { place: '🥉 3 miejsce - LUKASZ', reward: 50 }
 ];
 
 const Table = () => {
