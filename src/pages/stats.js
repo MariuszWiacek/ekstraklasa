@@ -21,7 +21,7 @@ const database = getDatabase(firebaseApp);
 const linkContainerStyle = {
   fontFamily: 'Rubik',
   textAlign: 'left',
-  padding: '20px',
+  padding: '2px',
   borderRadius: '10px',
   marginBottom: '20px',
 };
@@ -245,7 +245,7 @@ const Stats = () => {
       <Row>
           <h2 style={{ textAlign: 'center' }}>Statystyki</h2>
           <hr />
-          <h3 style={{ textAlign: 'center', fontFamily: 'Rubik' }}>🏆 Rekordy ligi 🏆</h3><hr />
+        
 
           <Table>
             <thead>
@@ -265,7 +265,7 @@ const Stats = () => {
                 return (
                   <tr key={entry.user}>
                     <td>{entry.user}</td>
-                    <td>{entry.points} (kolejka nr {entry.bestKolejkaId})</td>
+                    <td>{entry.points} <p style={{color:'red'}}>(kol nr {entry.bestKolejkaId})</p></td>
                     
                     <td>{entry.averagePoints}</td>
                     <td>{entry.mostCorrectTypes}</td>

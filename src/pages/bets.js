@@ -216,9 +216,8 @@ const Bets = () => {
   - najwiecej pkt w jednej kolejce - ROBERT - kolejka 18<br></br>
   - Typowalismy 162 mecze, najwiecej typów w nich zgadli - ROBERT 71/153, Alan - 70/153, Lukasz - 70/153<br></br>
   - Patrycja odgadla az 67 typow ale ze wzgledu mala liczbe dokladnych wynikow zajela dopiero 6 miejsce<br></br>
-  Po wiece<br></br>
-  - najwiecej pkt w jednej kolejce - ROBERT - kolejka 18<br></br>
-  - najwiecej pkt w jednej kolejce - ROBERT - kolejka 18<hr></hr>
+  Wkrótce wiecej statystyk <br></br>
+  
   </p>
 
       <p>Wybrany użytkownik : </p>
