@@ -243,7 +243,6 @@ const Stats = () => {
   return (
     <Container fluid style={linkContainerStyle}>
       <Row>
-        <Col md={12}>
           <h2 style={{ textAlign: 'center' }}>Statystyki</h2>
           <hr />
           <h3 style={{ textAlign: 'center', fontFamily: 'Rubik' }}>🏆 Rekordy ligi 🏆</h3><hr />
@@ -266,7 +265,7 @@ const Stats = () => {
                 return (
                   <tr key={entry.user}>
                     <td>{entry.user}</td>
-                    <td>{entry.points} (w kolejce nr {entry.bestKolejkaId})</td>
+                    <td>{entry.points} (kolejka nr {entry.bestKolejkaId})</td>
                     
                     <td>{entry.averagePoints}</td>
                     <td>{entry.mostCorrectTypes}</td>
@@ -279,9 +278,6 @@ const Stats = () => {
             </tbody>
           </Table>
 
-          
-
-        </Col>
       </Row>
     </Container>
   );
