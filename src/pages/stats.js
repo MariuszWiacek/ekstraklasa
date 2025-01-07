@@ -198,7 +198,7 @@ const Stats = () => {
             {userStats.length > 0 ? (
               userStats.map((userStats, idx) => (
                 <div key={idx}>
-                  <h3>{userStats.user}</h3>
+                  <h3>{userStats.user}</h3><hr></hr>
                   <p><strong>⚽ Najczęściej Wybierana Drużyna: </strong> {userStats.mostChosenTeam}</p>
                   <p><strong>👎🏿 Najbardziej Zawodząca Drużyna: </strong> {userStats.mostDisappointingTeam}</p>
                   <p><strong>👍 Najbardziej Punktująca Drużyna: </strong> {userStats.mostSuccessfulTeam}</p>
