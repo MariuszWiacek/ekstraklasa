@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { getDatabase, ref, onValue } from 'firebase/database';
 import { initializeApp } from 'firebase/app';
-import { Row, Col, Container, Table } from 'react-bootstrap';
+import { Row, Col, Container } from 'react-bootstrap';
+import { Line } from 'react-chartjs-2'; // Importing Line chart from Chart.js
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 
+// Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
@@ -11,79 +14,37 @@ const firebaseConfig = {
   storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.REACT_APP_FIREBASE_APP_ID,
-  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
 const database = getDatabase(firebaseApp);
 
-const linkContainerStyle = {
-  fontFamily: 'Rubik',
-  textAlign: 'left',
-  padding: '2px',
-  borderRadius: '10px',
-  marginBottom: '20px',
-};
-
-const averagePointsStyle = {
-  fontFamily: 'Rubik',
-  color: 'aliceblue',
-  backgroundColor: '#0090cdf1',
-  padding: '20px',
-  borderRadius: '10px',
-  marginBottom: '20px',
-  textAlign: 'center',
-  transition: 'transform 0.3s, box-shadow 0.3s',
-  boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-};
-
-const calculatePoints = (bets, results) => {
-  let points = 0;
-  let correctTypes = 0;
-  let correctResults = 0;
-  let correctTypesWithResults = 0;
-
-  bets.forEach((bet) => {
-    const result = results[bet.id];
-    if (result) {
-      const [homeScore, awayScore] = result.split(':').map(Number);
-      const betScore = bet.score.split(':').map(Number);
-
-      if (betScore[0] === homeScore && betScore[1] === awayScore) {
-        points += 3;
-        correctResults++;
-        correctTypes++;
-        correctTypesWithResults++;
-      } else if (bet.bet === (homeScore === awayScore ? 'X' : homeScore > awayScore ? '1' : '2')) {
-        points += 1;
-        correctTypes++;
-      }
-    }
-  });
-
-  return { points, correctTypes, correctResults, correctTypesWithResults };
-};
+// Register Chart.js components
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const Stats = () => {
   const [results, setResults] = useState({});
   const [submittedData, setSubmittedData] = useState({});
-  const [hallOfFame, setHallOfFame] = useState([]);
-  const [averagePoints, setAveragePoints] = useState([]);
-  const [mostChosenFailedTeam, setMostChosenFailedTeam] = useState(null);
-  const [favoriteTeams, setFavoriteTeams] = useState({});
-  const [mostChosenCorrectTeam, setMostChosenCorrectTeam] = useState(null);
-  const [updatedTableData, setUpdatedTableData] = useState([]);
-  const [mostChosenScores, setMostChosenScores] = useState({});
-
+  const [teamStats, setTeamStats] = useState({
+    teamChosenCount: {},
+    teamSuccessCount: {},
+    teamFailureCount: {},
+  });
+  const [userStats, setUserStats] = useState([]);
+  const [kolejkaPoints, setKolejkaPoints] = useState([]); // Points for each round
+  const [hallOfFame, setHallOfFame] = useState([]); // Hall of Fame data
 
   useEffect(() => {
+    // Fetch results
     const resultsRef = ref(database, 'results');
     onValue(resultsRef, (snapshot) => {
       const data = snapshot.val();
       setResults(data || {});
     });
 
+    // Fetch submitted data
     const submittedDataRef = ref(database, 'submittedData');
     onValue(submittedDataRef, (snapshot) => {
       const data = snapshot.val();
@@ -92,192 +53,190 @@ const Stats = () => {
   }, []);
 
   useEffect(() => {
-    const teamChoices = {};
-    const teamCorrectChoices = {};
-    const teamFails = {};
-    const userFavoriteTeams = {};
-    const scoreChoices = {}; // Track score choices globally
+    if (!submittedData || !results) return;
 
-    const updatedTableData = Object.keys(submittedData).map((user) => {
-      const bets = Object.entries(submittedData[user]).map(([id, bet]) => ({
-        ...bet,
-        id,
-      }));
+    const teamChosenCount = {};
+    const teamSuccessCount = {};
+    const teamFailureCount = {};
+    const userStatsData = [];
+    const kolejkaPointsData = [];
+    const hallOfFameData = []; // To store Hall of Fame data
 
-      const kolejkaPoints = {};
-      bets.forEach((bet) => {
-        const kolejkaId = Math.floor((bet.id - 1) / 9);
-        if (!kolejkaPoints[kolejkaId]) {
-          kolejkaPoints[kolejkaId] = [];
-        }
-        kolejkaPoints[kolejkaId].push(bet);
-      });
-
-      let maxPoints = 0;
-      let bestKolejkaId = null;
-      let totalPoints = 0;
-      let totalKolejkas = 0;
-      let mostCorrectTypes = 0;
-      let mostCorrectResults = 0;
-      let mostCorrectTypesWithResults = 0;
-
-      for (const kolejkaId in kolejkaPoints) {
-        const kolejekBets = kolejkaPoints[kolejkaId];
-        const { points, correctTypes, correctResults, correctTypesWithResults } = calculatePoints(kolejekBets, results);
-
-        totalPoints += points;
-        totalKolejkas++;
-
-        if (points > maxPoints) {
-          maxPoints = points;
-          bestKolejkaId = kolejkaId;
-        }
-
-        mostCorrectTypes = Math.max(mostCorrectTypes, correctTypes);
-        mostCorrectResults = Math.max(mostCorrectResults, correctResults);
-        mostCorrectTypesWithResults = Math.max(mostCorrectTypesWithResults, correctTypesWithResults);
-
-        kolejekBets.forEach((bet) => {
-          const team = bet.home || bet.away;
-          const result = results[bet.id];
-          if (result) {
-            const [homeScore, awayScore] = result.split(':').map(Number);
-
-            // Track score choices globally
-            const score = `${homeScore}:${awayScore}`;
-            if (!scoreChoices[score]) {
-              scoreChoices[score] = 0;
-            }
-            scoreChoices[score]++;
-          }
-        });
-      }
-
-      const averagePoints = totalKolejkas > 0 ? (totalPoints / totalKolejkas).toFixed(2) : 0;
-
-      return {
-        user,
-        points: maxPoints,
-        bestKolejkaId,
-        averagePoints,
-        mostCorrectTypes,
-        mostCorrectResults,
-        mostCorrectTypesWithResults,
-      };
-    });
-
-   
-
-    const mostChosenFailedTeamData = Object.keys(teamFails).map(team => ({
-      team,
-      chosen: teamChoices[team],
-      failed: teamFails[team],
-    })).sort((a, b) => b.failed - a.failed || b.chosen - a.chosen)[0];
-
-    setMostChosenFailedTeam(mostChosenFailedTeamData);
-
+    // Process submitted data
     Object.keys(submittedData).forEach((user) => {
-      const bets = submittedData[user]?.filter(Boolean) || [];
-      const teamCount = {};
+      const bets = Object.entries(submittedData[user] || {});
+      const userStats = {
+        user,
+        chosenTeams: {},
+        mostChosenTeam: '',  // Track most chosen team for this user
+        mostDisappointingTeam: '',
+        mostSuccessfulTeam: '',
+        maxPointsInOneKolejka: 0,
+        kolejki: [],
+      };
 
-      bets.forEach((bet) => {
-        const team = bet.bet === '1' ? bet.home : bet.bet === '2' ? bet.away : null;
-        if (team) {
-          if (!teamCount[team]) {
-            teamCount[team] = 0;
-          }
-          teamCount[team]++;
+      const teamFailureCountUser = {}; // To track failures per team
+      const teamSuccessCountUser = {}; // To track successes per team
+
+      // Track statistics for each bet
+      bets.forEach(([id, bet]) => {
+        const result = results[id];
+        if (!result || (!bet.home && !bet.away)) {
+          console.warn(`Missing result or home/away team for bet ID: ${id}`);
+          return;
         }
+
+        const { home: homeTeam, away: awayTeam, bet: betOutcome } = bet;
+        const [homeScore, awayScore] = result.split(':').map(Number);
+        const actualOutcome = homeScore === awayScore ? 'X' : homeScore > awayScore ? '1' : '2';
+
+        // Track statistics for each user bet
+        if (betOutcome === '1') {
+          // Track teams betted on
+          userStats.chosenTeams[homeTeam] = (userStats.chosenTeams[homeTeam] || 0) + 1;
+          if (actualOutcome === '1') {
+            teamSuccessCountUser[homeTeam] = (teamSuccessCountUser[homeTeam] || 0) + 1;
+          } else {
+            teamFailureCountUser[homeTeam] = (teamFailureCountUser[homeTeam] || 0) + 1;
+          }
+        } else if (betOutcome === '2') {
+          // Track teams betted on
+          userStats.chosenTeams[awayTeam] = (userStats.chosenTeams[awayTeam] || 0) + 1;
+          if (actualOutcome === '2') {
+            teamSuccessCountUser[awayTeam] = (teamSuccessCountUser[awayTeam] || 0) + 1;
+          } else {
+            teamFailureCountUser[awayTeam] = (teamFailureCountUser[awayTeam] || 0) + 1;
+          }
+        }
+
+        // Collect data for user stats by Kolejka
+        const kolejkaId = Math.floor((id - 1) / 9); // assuming each kolejka has 9 games
+        if (!userStats.kolejki[kolejkaId]) {
+          userStats.kolejki[kolejkaId] = {
+            points: 0,
+          };
+        }
+
+        const userKolejka = userStats.kolejki[kolejkaId];
+        const isSuccess = betOutcome === actualOutcome;
+        userKolejka.points += isSuccess ? 3 : 0; // 3 points for correct outcome
+
+        // Update max points in one round
+        userStats.maxPointsInOneKolejka = Math.max(userStats.maxPointsInOneKolejka, userKolejka.points);
       });
 
-      const favoriteTeam = Object.keys(teamCount).reduce((a, b) => teamCount[a] > teamCount[b] ? a : b, null);
-      userFavoriteTeams[user] = { team: favoriteTeam || 'Brak' };  // Default to 'Brak' if no favorite team
+      // Find the most chosen team for the user
+      const mostChosenTeam = Object.entries(userStats.chosenTeams)
+        .sort((a, b) => b[1] - a[1])[0]?.[0]; // Get team with most selections
+      userStats.mostChosenTeam = mostChosenTeam || '------';
+
+      // Find the most disappointing team: the one most chosen but least successful
+      const mostDisappointingTeam = Object.entries(userStats.chosenTeams)
+        .sort((a, b) => (teamFailureCountUser[b[0]] || 0) - (teamFailureCountUser[a[0]] || 0))[0]?.[0]; // Most disappointing team
+      userStats.mostDisappointingTeam = mostDisappointingTeam || '------';
+
+      // Find the most successful team: the team with the highest success rate
+      const mostSuccessfulTeam = Object.entries(userStats.chosenTeams)
+        .sort((a, b) => (teamSuccessCountUser[b[0]] || 0) - (teamSuccessCountUser[a[0]] || 0))[0]?.[0]; // Most successful team
+      userStats.mostSuccessfulTeam = mostSuccessfulTeam || '------';
+
+      userStatsData.push(userStats);
+
+      // Add user to Hall of Fame if they achieved the highest points
+      if (userStats.maxPointsInOneKolejka >= 20) {
+        hallOfFameData.push(userStats); // Add to Hall of Fame if they reached a certain threshold
+      }
     });
 
-    setFavoriteTeams(userFavoriteTeams);
-
-    const mostChosenCorrectTeamData = Object.keys(teamCorrectChoices).map(team => ({
-      team,
-      correctChoices: teamCorrectChoices[team],
-      totalChoices: teamChoices[team],
-    })).sort((a, b) => b.correctChoices - a.correctChoices || b.totalChoices - a.totalChoices)[0];
-
-    setMostChosenCorrectTeam(mostChosenCorrectTeamData);
-
-    updatedTableData.sort((a, b) => b.points - a.points);
-
-    const maxPoints = Math.max(...updatedTableData.map(entry => entry.points));
-    const maxCorrectTypes = Math.max(...updatedTableData.map(entry => entry.mostCorrectTypes));
-    const maxCorrectTypesWithResults = Math.max(...updatedTableData.map(entry => entry.mostCorrectTypesWithResults));
-
-    const hallOfFameData = [
-      {
-        title: "Najwięcej pkt w jednej kolejce",
-        value: maxPoints,
-        users: updatedTableData.filter(entry => entry.points === maxPoints).map(entry => entry.user),
-      },
-      {
-        title: "Najwięcej typów ☑️ * w jednej kolejce",
-        value: maxCorrectTypes,
-        users: updatedTableData.filter(entry => entry.mostCorrectTypes === maxCorrectTypes).map(entry => entry.user),
-      },
-      {
-        title: "Najwięcej typ+wynik ✅☑️ w jednej kolejce",
-        value: maxCorrectTypesWithResults,
-        users: updatedTableData.filter(entry => entry.mostCorrectTypesWithResults === maxCorrectTypesWithResults).map(entry => entry.user),
-      },
-    ];
-
-    const averagePointsData = updatedTableData.map(entry => ({
-      value: entry.averagePoints,
-      user: entry.user,
-    }));
-
-    setHallOfFame(hallOfFameData);
-    setAveragePoints(averagePointsData.sort((a, b) => b.value - a.value));
-
-    setUpdatedTableData(updatedTableData);
-
+    setUserStats(userStatsData);
+    setTeamStats({ teamChosenCount, teamSuccessCount, teamFailureCount });
+    setKolejkaPoints(kolejkaPointsData); // Save points per kolejka
+    setHallOfFame(hallOfFameData); // Set Hall of Fame data
   }, [submittedData, results]);
 
+  const { teamChosenCount, teamSuccessCount, teamFailureCount } = teamStats;
+
+  // Prepare data for chart
+  const chartData = {
+    labels: kolejkaPoints.map((_, index) => `Kolejka ${index + 1}`),
+    datasets: [
+      {
+        label: 'Punkty w Kolejkach',
+        data: kolejkaPoints,
+        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        fill: true,
+      },
+    ],
+  };
+
+  // Chart data for each user
+  const getUserChartData = (userKolejki) => {
+    const userPoints = userKolejki.map(kolejka => kolejka.points);
+    return {
+      labels: userKolejki.map((_, index) => `Kolejka ${index + 1}`),
+      datasets: [
+        {
+          label: 'Punkty użytkownika',
+          data: userPoints,
+          borderColor: 'rgba(54, 162, 235, 1)',
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          fill: true,
+        },
+      ],
+    };
+  };
+
   return (
-    <Container fluid style={linkContainerStyle}>
+    <Container fluid>
       <Row>
-          <h2 style={{ textAlign: 'center' }}>Statystyki</h2>
+        <Col md={12}>
+          <h2 style={{ textAlign: 'center' }}>Statystyki Użytkowników</h2>
           <hr />
-        
-
-          <Table>
-            <thead>
-              <tr>
-                <th>Gracz</th>
-                <th>Najwięcej pkt</th>
-                
-                <th>Średnie Punkty</th>
-                <th>Najwięcej Typów ☑️</th>
-                <th>Typ + Wynik ✅☑️</th>
-                <th>Najczesciej wybierany zespół</th>
-              
-              </tr>
-            </thead>
-            <tbody>
-              {updatedTableData.map((entry) => {
-                return (
-                  <tr key={entry.user}>
-                    <td>{entry.user}</td>
-                    <td>{entry.points} <p style={{color:'red'}}>(kol nr {entry.bestKolejkaId})</p></td>
-                    
-                    <td>{entry.averagePoints}</td>
-                    <td>{entry.mostCorrectTypes}</td>
-                    <td>{entry.mostCorrectTypesWithResults}</td>
-                    <td>{favoriteTeams[entry.user]?.team || 'Brak'}</td>
-                    
-                  </tr>
-                );
-              })}
-            </tbody>
-          </Table>
-
+          <div>
+            <hr />
+            {userStats.length > 0 ? (
+              userStats.map((userStats, idx) => (
+                <div key={idx}>
+                  <h3>{userStats.user}</h3>
+                  <p><strong>⚽ Najczęściej Wybierana Drużyna: </strong> {userStats.mostChosenTeam}</p>
+                  <p><strong>👎🏿 Najbardziej Zawodząca Drużyna: </strong> {userStats.mostDisappointingTeam}</p>
+                  <p><strong>👍 Najbardziej Punktująca Drużyna: </strong> {userStats.mostSuccessfulTeam}</p>
+                  <p><strong>🎖️ Najwięcej Punktów w Jednej Kolejce: </strong> {userStats.maxPointsInOneKolejka}</p>
+                  <div>
+                    <Line 
+                      data={getUserChartData(userStats.kolejki)} 
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: {
+                            display: false,
+                          },
+                        },
+                        scales: {
+                          x: {
+                            ticks: {
+                              autoSkip: true,
+                              maxTicksLimit: 5,
+                            },
+                          },
+                          y: {
+                            beginAtZero: false,
+                            max: 27,
+                          },
+                        },
+                      }} 
+                      style={{ height: 'auto', width: '100%', backgroundColor: 'white', opacity: '0.8', color: 'red' }} 
+                    />
+                  </div><hr />
+                </div>
+              ))
+            ) : (
+              <p>------</p>
+            )}
+          </div>
+        </Col>
       </Row>
     </Container>
   );
