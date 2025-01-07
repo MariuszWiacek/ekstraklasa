@@ -14,7 +14,7 @@ const firebaseConfig = {
   storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.REACT_APP_FIREBASE_APP_ID,
-  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
@@ -92,29 +92,21 @@ const Stats = () => {
 
         // Track statistics for each user bet
         if (betOutcome === '1') {
-          // Track teams betted on
           userStats.chosenTeams[homeTeam] = (userStats.chosenTeams[homeTeam] || 0) + 1;
           if (actualOutcome === '1') {
             teamSuccessCountUser[homeTeam] = (teamSuccessCountUser[homeTeam] || 0) + 1;
-          } else {
-            teamFailureCountUser[homeTeam] = (teamFailureCountUser[homeTeam] || 0) + 1;
           }
         } else if (betOutcome === '2') {
-          // Track teams betted on
           userStats.chosenTeams[awayTeam] = (userStats.chosenTeams[awayTeam] || 0) + 1;
           if (actualOutcome === '2') {
             teamSuccessCountUser[awayTeam] = (teamSuccessCountUser[awayTeam] || 0) + 1;
-          } else {
-            teamFailureCountUser[awayTeam] = (teamFailureCountUser[awayTeam] || 0) + 1;
           }
         }
 
         // Collect data for user stats by Kolejka
         const kolejkaId = Math.floor((id - 1) / 9); // assuming each kolejka has 9 games
         if (!userStats.kolejki[kolejkaId]) {
-          userStats.kolejki[kolejkaId] = {
-            points: 0,
-          };
+          userStats.kolejki[kolejkaId] = { points: 0 };
         }
 
         const userKolejka = userStats.kolejki[kolejkaId];
