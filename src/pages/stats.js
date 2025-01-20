@@ -95,11 +95,15 @@ const Stats = () => {
           userStats.chosenTeams[homeTeam] = (userStats.chosenTeams[homeTeam] || 0) + 1;
           if (actualOutcome === '1') {
             teamSuccessCountUser[homeTeam] = (teamSuccessCountUser[homeTeam] || 0) + 1;
+          } else {
+            teamFailureCountUser[homeTeam] = (teamFailureCountUser[homeTeam] || 0) + 1;
           }
         } else if (betOutcome === '2') {
           userStats.chosenTeams[awayTeam] = (userStats.chosenTeams[awayTeam] || 0) + 1;
           if (actualOutcome === '2') {
             teamSuccessCountUser[awayTeam] = (teamSuccessCountUser[awayTeam] || 0) + 1;
+          } else {
+            teamFailureCountUser[awayTeam] = (teamFailureCountUser[awayTeam] || 0) + 1;
           }
         }
 
@@ -124,7 +128,11 @@ const Stats = () => {
 
       // Find the most disappointing team: the one most chosen but least successful
       const mostDisappointingTeam = Object.entries(userStats.chosenTeams)
-        .sort((a, b) => (teamFailureCountUser[b[0]] || 0) - (teamFailureCountUser[a[0]] || 0))[0]?.[0]; // Most disappointing team
+        .sort((a, b) => {
+          const failuresA = teamFailureCountUser[a[0]] || 0;
+          const failuresB = teamFailureCountUser[b[0]] || 0;
+          return failuresB - failuresA; // Sort by most failures
+        })[0]?.[0]; // Most disappointing team
       userStats.mostDisappointingTeam = mostDisappointingTeam || '------';
 
       // Find the most successful team: the team with the highest success rate
