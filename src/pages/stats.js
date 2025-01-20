@@ -169,35 +169,30 @@ const Stats = () => {
               <p><strong>👍 Najbardziej Punktująca Drużyna:</strong> {userStats.mostSuccessfulTeam}</p>
               <p><strong>🎖️ Najwięcej Punktów w Jednej Kolejce:</strong> {userStats.maxPointsInOneKolejka}</p>
               <Line 
-                data={getUserChartData(userStats.kolejki)} 
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      display: false,
-                    },
-                  },
-                  scales: {
-                    x: {
-                      ticks: {
-                        autoSkip: true,
-                        maxTicksLimit: 5,
-                      },
-                    },
-                    y: {
-                      beginAtZero: false,
-                      max: 27,
-                    },
-                  },
-                }} 
-                style={{
-                  height: 'auto',
-                  width: '100%',
-                  backgroundColor: 'white',
-                  opacity: '0.8',
-                }} 
-              />
+                      data={getUserChartData(userStats.kolejki)} 
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: {
+                            display: false,
+                          },
+                        },
+                        scales: {
+                          x: {
+                            ticks: {
+                              autoSkip: true,
+                              maxTicksLimit: 5,
+                            },
+                          },
+                          y: {
+                            beginAtZero: false,
+                            max: 27,
+                          },
+                        },
+                      }} 
+                      style={{ height: 'auto', width: '100%', backgroundColor: 'white', opacity: '0.8', color: 'red' }} 
+                    />
               <hr />
             </div>
           ))}
