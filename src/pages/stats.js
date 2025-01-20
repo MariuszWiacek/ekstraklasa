@@ -179,16 +179,36 @@ const Stats = () => {
               <p><strong>👍 Najbardziej Punktująca Drużyna: </strong>{userStats.mostSuccessfulTeam}</p>
               <p><strong>🎖️ Najwięcej Punktów w Jednej Kolejce: </strong>{userStats.maxPointsInOneKolejka}</p>
               <Line 
-                data={getUserChartData(userStats.kolejki)} 
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: { legend: { display: false } },
-                }}
-              />
-              <hr />
-            </div>
-          ))}
+  data={getUserChartData(userStats.kolejki)} 
+  options={{
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false, // Hide legend
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          autoSkip: true, // Skip excessive ticks
+          maxTicksLimit: 5, // Limit to 5 ticks
+        },
+      },
+      y: {
+        beginAtZero: false, // Start at minimum points
+        max: 27, // Assuming max points per kolejka is 27
+      },
+    },
+  }} 
+  style={{
+    height: 'auto', // Maintain responsive height
+    width: '100%', // Ensure full width
+    backgroundColor: 'white', // Add white background
+    opacity: '0.8', // Make it semi-transparent
+    color: 'red', // Highlight the data
+  }} 
+/>
 
           <h2>Najlepsi w Kolejce</h2>
           {bestPerformersByKolejka.map((kolejka, idx) => (
