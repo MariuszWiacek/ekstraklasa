@@ -27,9 +27,14 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 const Stats = () => {
   const [results, setResults] = useState({});
   const [submittedData, setSubmittedData] = useState({});
+  const [teamStats, setTeamStats] = useState({
+    teamChosenCount: {},
+    teamSuccessCount: {},
+    teamFailureCount: {},
+  });
   const [userStats, setUserStats] = useState([]);
-  const [hallOfFame, setHallOfFame] = useState([]);
-  const [bestPerformersByKolejka, setBestPerformersByKolejka] = useState([]);
+  const [kolejkaPoints, setKolejkaPoints] = useState([]); // Points for each kolejka
+  const [hallOfFame, setHallOfFame] = useState([]); // Hall of Fame data
 
   useEffect(() => {
     // Fetch results
@@ -52,8 +57,8 @@ const Stats = () => {
 
     const userStatsData = [];
     const hallOfFameData = [];
-    const bestPerformersData = [];
 
+    // Process submitted data
     Object.keys(submittedData).forEach((user) => {
       const bets = Object.entries(submittedData[user] || {});
       const userStats = {
@@ -69,6 +74,7 @@ const Stats = () => {
       const teamFailureCountUser = {};
       const teamSuccessCountUser = {};
 
+      // Track statistics for each bet
       bets.forEach(([id, bet]) => {
         const result = results[id];
         if (!result || (!bet.home && !bet.away)) return;
@@ -77,17 +83,20 @@ const Stats = () => {
         const [homeScore, awayScore] = result.split(':').map(Number);
         const actualOutcome = homeScore === awayScore ? 'X' : homeScore > awayScore ? '1' : '2';
 
-        const kolejkaId = Math.floor((id - 1) / 9);
+        // Collect data for user stats by Kolejka
+        const kolejkaId = Math.floor((id - 1) / 9); // assuming each kolejka has 9 games
         if (!userStats.kolejki[kolejkaId]) {
           userStats.kolejki[kolejkaId] = { points: 0 };
         }
 
         const userKolejka = userStats.kolejki[kolejkaId];
         const isSuccess = betOutcome === actualOutcome;
-        userKolejka.points += isSuccess ? 3 : 0;
+        userKolejka.points += isSuccess ? 3 : 0; // 3 points for correct outcome
 
+        // Update max points in one round
         userStats.maxPointsInOneKolejka = Math.max(userStats.maxPointsInOneKolejka, userKolejka.points);
 
+        // Track team stats
         if (betOutcome === '1') {
           userStats.chosenTeams[homeTeam] = (userStats.chosenTeams[homeTeam] || 0) + 1;
           if (actualOutcome === '1') {
@@ -105,52 +114,33 @@ const Stats = () => {
         }
       });
 
-      const mostChosenTeam = Object.entries(userStats.chosenTeams)
-        .sort((a, b) => b[1] - a[1])[0]?.[0];
-      userStats.mostChosenTeam = mostChosenTeam || '------';
+      // Find the most chosen team
+      userStats.mostChosenTeam = Object.entries(userStats.chosenTeams)
+        .sort((a, b) => b[1] - a[1])[0]?.[0] || '------';
 
-      const mostDisappointingTeam = Object.entries(userStats.chosenTeams)
-        .sort((a, b) => (teamFailureCountUser[b[0]] || 0) - (teamFailureCountUser[a[0]] || 0))[0]?.[0];
-      userStats.mostDisappointingTeam = mostDisappointingTeam || '------';
+      // Find the most disappointing team
+      userStats.mostDisappointingTeam = Object.entries(userStats.chosenTeams)
+        .sort((a, b) => (teamFailureCountUser[b[0]] || 0) - (teamFailureCountUser[a[0]] || 0))[0]?.[0] || '------';
 
-      const mostSuccessfulTeam = Object.entries(userStats.chosenTeams)
-        .sort((a, b) => (teamSuccessCountUser[b[0]] || 0) - (teamSuccessCountUser[a[0]] || 0))[0]?.[0];
-      userStats.mostSuccessfulTeam = mostSuccessfulTeam || '------';
+      // Find the most successful team
+      userStats.mostSuccessfulTeam = Object.entries(userStats.chosenTeams)
+        .sort((a, b) => (teamSuccessCountUser[b[0]] || 0) - (teamSuccessCountUser[a[0]] || 0))[0]?.[0] || '------';
 
       userStatsData.push(userStats);
 
+      // Add to Hall of Fame
       if (userStats.maxPointsInOneKolejka >= 20) {
         hallOfFameData.push(userStats);
       }
     });
 
-    const kolejkiCount = Math.max(...userStatsData.map(user => user.kolejki.length));
-    for (let i = 0; i < kolejkiCount; i++) {
-      let maxPoints = 0;
-      const bestPerformers = [];
-
-      userStatsData.forEach(user => {
-        if (user.kolejki[i] && user.kolejki[i].points > maxPoints) {
-          maxPoints = user.kolejki[i].points;
-        }
-      });
-
-      userStatsData.forEach(user => {
-        if (user.kolejki[i] && user.kolejki[i].points === maxPoints) {
-          bestPerformers.push(user.user);
-        }
-      });
-
-      bestPerformersData.push({ kolejka: i + 1, maxPoints, bestPerformers });
-    }
-
     setUserStats(userStatsData);
     setHallOfFame(hallOfFameData);
-    setBestPerformersByKolejka(bestPerformersData);
   }, [submittedData, results]);
 
+  // Chart for user points per kolejka
   const getUserChartData = (userKolejki) => {
-    const userPoints = userKolejki.map(kolejka => kolejka.points);
+    const userPoints = userKolejki.map((kolejka) => kolejka.points);
     return {
       labels: userKolejki.map((_, index) => `Kolejka ${index + 1}`),
       datasets: [
@@ -174,48 +164,40 @@ const Stats = () => {
           {userStats.map((userStats, idx) => (
             <div key={idx}>
               <h3>{userStats.user}</h3>
-              <p><strong>⚽ Najczęściej Wybierana Drużyna: </strong>{userStats.mostChosenTeam}</p>
-              <p><strong>👎 Najbardziej Zawodząca Drużyna: </strong>{userStats.mostDisappointingTeam}</p>
-              <p><strong>👍 Najbardziej Punktująca Drużyna: </strong>{userStats.mostSuccessfulTeam}</p>
-              <p><strong>🎖️ Najwięcej Punktów w Jednej Kolejce: </strong>{userStats.maxPointsInOneKolejka}</p>
+              <p><strong>⚽ Najczęściej Wybierana Drużyna:</strong> {userStats.mostChosenTeam}</p>
+              <p><strong>👎 Najbardziej Zawodząca Drużyna:</strong> {userStats.mostDisappointingTeam}</p>
+              <p><strong>👍 Najbardziej Punktująca Drużyna:</strong> {userStats.mostSuccessfulTeam}</p>
+              <p><strong>🎖️ Najwięcej Punktów w Jednej Kolejce:</strong> {userStats.maxPointsInOneKolejka}</p>
               <Line 
-  data={getUserChartData(userStats.kolejki)} 
-  options={{
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false, // Hide legend
-      },
-    },
-    scales: {
-      x: {
-        ticks: {
-          autoSkip: true, // Skip excessive ticks
-          maxTicksLimit: 5, // Limit to 5 ticks
-        },
-      },
-      y: {
-        beginAtZero: false, // Start at minimum points
-        max: 27, // Assuming max points per kolejka is 27
-      },
-    },
-  }} 
-  style={{
-    height: 'auto', // Maintain responsive height
-    width: '100%', // Ensure full width
-    backgroundColor: 'white', // Add white background
-    opacity: '0.8', // Make it semi-transparent
-    color: 'red', // Highlight the data
-  }} 
-/>
-
-          <h2>Najlepsi w Kolejce</h2>
-          {bestPerformersByKolejka.map((kolejka, idx) => (
-            <div key={idx}>
-              <h3>Kolejka {kolejka.kolejka}</h3>
-              <p><strong>Maksymalne Punkty: </strong>{kolejka.maxPoints}</p>
-              <p><strong>Najlepsi: </strong>{kolejka.bestPerformers.join(', ')}</p>
+                data={getUserChartData(userStats.kolejki)} 
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      display: false,
+                    },
+                  },
+                  scales: {
+                    x: {
+                      ticks: {
+                        autoSkip: true,
+                        maxTicksLimit: 5,
+                      },
+                    },
+                    y: {
+                      beginAtZero: false,
+                      max: 27,
+                    },
+                  },
+                }} 
+                style={{
+                  height: 'auto',
+                  width: '100%',
+                  backgroundColor: 'white',
+                  opacity: '0.8',
+                }} 
+              />
               <hr />
             </div>
           ))}
