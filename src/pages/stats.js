@@ -52,7 +52,6 @@ const Stats = () => {
 
     const userStatsData = [];
     const hallOfFameData = [];
-    const kolejkaPoints = [];
     const bestPerformersData = [];
 
     Object.keys(submittedData).forEach((user) => {
@@ -115,6 +114,22 @@ const Stats = () => {
     setBestPerformersByKolejka(bestPerformersData);
   }, [submittedData, results]);
 
+  const getUserChartData = (userKolejki) => {
+    const userPoints = userKolejki.map(kolejka => kolejka.points);
+    return {
+      labels: userKolejki.map((_, index) => `Kolejka ${index + 1}`),
+      datasets: [
+        {
+          label: 'Punkty użytkownika',
+          data: userPoints,
+          borderColor: 'rgba(54, 162, 235, 1)',
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          fill: true,
+        },
+      ],
+    };
+  };
+
   return (
     <Container fluid>
       <Row>
@@ -126,6 +141,23 @@ const Stats = () => {
               <div key={idx}>
                 <h3>{userStats.user}</h3>
                 <p><strong>🎖️ Najwięcej Punktów w Jednej Kolejce: </strong> {userStats.maxPointsInOneKolejka}</p>
+                <div>
+                  <Line 
+                    data={getUserChartData(userStats.kolejki)} 
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { display: false },
+                      },
+                      scales: {
+                        x: { ticks: { autoSkip: true, maxTicksLimit: 5 } },
+                        y: { beginAtZero: false, max: 27 },
+                      },
+                    }} 
+                    style={{ height: 'auto', width: '100%', backgroundColor: 'white', opacity: '0.8' }} 
+                  />
+                </div>
                 <hr />
               </div>
             ))
